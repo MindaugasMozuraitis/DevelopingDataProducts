@@ -1,0 +1,42 @@
+---
+title: "Developing Data Products: Week 3 Assignment"
+author: "Mindaugas Mozuraitis"
+date: "October 6, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Cancer Incidence in Canada (1992-2015)
+```{r, results="hide", echo=FALSE, message=FALSE, warning=FALSE, fig.width=10}
+library(downloader)
+url="https://www150.statcan.gc.ca/n1/tbl/csv/13100747-eng.zip"
+download(url, dest="cancer_incidence.zip", mode="wb")
+unzip("cancer_incidence.zip")
+
+ci_data=read.csv("13100747.csv")
+
+file.remove("13100747.csv")
+file.remove("13100747_MetaData.csv")
+file.remove("cancer_incidence.zip")
+```
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, fig.width=10}
+sub_data=subset(ci_data, Sex=="Both sexes" 
+                & Characteristics %in% c("Cancer incidence","Number of new cancer cases")
+                & Primary.types.of.cancer..ICD.O.3. == "Total, all primary sites of cancer")
+
+sub_data$Year=as.ts(sub_data$ï..REF_DATE)
+sub_data$CancerType=sub_data$Primary.types.of.cancer..ICD.O.3.
+plot_data= subset(sub_data, GEO != "Canada" 
+                          & GEO != "Canada excluding Quebec" 
+                          & Characteristics %in% c("Number of new cancer cases"))
+
+
+
+library(plotly)
+plot_ly(plot_data, x = ~Year, y = ~VALUE, color = ~GEO, type = "scatter", mode = "lines")%>%layout(xaxis = list(title="Year of diagnosis"), yaxis = list(title =unique(plot_data$Characteristics)))
+```
+Source: https://www.statcan.gc.ca/
